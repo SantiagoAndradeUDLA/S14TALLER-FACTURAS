@@ -1,13 +1,15 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 
-struct Producto {
+struct Producto
+{
     char nombre[50];
     int cantidad;
     float precio;
 };
 
-struct Factura {
+struct Factura
+{
     int numeroFactura;
     char nombre[20];
     int cedula;
@@ -23,10 +25,15 @@ int menu();
 void leerCadena(char *cadena, int num);
 int leerEnteroPositivo(const char *mensaje);
 float leerFloatPositivo(const char *mensaje);
+void validarCantidadEntera(struct Producto *producto);
 void calcularTotalFactura(struct Factura *factura, float impuesto, float descuento);
 void imprimirFactura(struct Factura *factura);
 void saveFactura(struct Factura *factura);
 void createFactura(int *contadorFactura);
 void readFactura();
+void buscarFactura();
+void editarFactura();
+void eliminarFactura();
+void reporteResumen();
 
 #endif // FUNCIONES_H
