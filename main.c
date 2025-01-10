@@ -9,9 +9,7 @@ int menu()
     printf("2. Leer facturas\n");
     printf("3. Editar factura\n");
     printf("4. Eliminar factura\n");
-    printf("5. Buscar factura\n");
-    printf("6. Reporte resumen\n");
-    printf("7. Salir\n");
+    printf("5. Salir\n");
     printf("Opcion: ");
     scanf("%d", &opcion);
     return opcion;
@@ -39,13 +37,8 @@ int main()
         case 4:
             eliminarFactura();
             break;
+            break;
         case 5:
-            buscarFactura();
-            break;
-        case 6:
-            reporteResumen();
-            break;
-        case 7:
             printf("Saliendo del programa...\n");
             break;
         default:
