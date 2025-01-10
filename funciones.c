@@ -334,58 +334,76 @@ void editarFactura()
     fclose(file);
 }
 
-void eliminarFactura()
-{
+void eliminarFactura() {
     FILE *file = fopen("factura.dat", "rb");
-    if (file == NULL)
-    {
-        printf("Error al abrir el archivo o el archivo no existe.\n");
+    if (!file) {
+        printf("Error al abrir el archivo.\n");
         return;
     }
 
-    FILE *tempFile = fopen("temp.dat", "wb");
-    if (tempFile == NULL)
-    {
-        printf("Error al crear el archivo temporal.\n");
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    int numFacturas = fileSize > 0 ? fileSize / sizeof(struct Factura) : 0;
+    struct Factura *facturas = numFacturas > 0 ? malloc(numFacturas * sizeof(struct Factura)) : NULL;
+
+    if (numFacturas > 0 && !facturas) {
+        printf("Error al asignar memoria.\n");
         fclose(file);
         return;
     }
 
-    int numeroFactura = leerEnteroPositivo("Ingrese el numero de factura a eliminar: ");
-    struct Factura factura;
-    int encontrado = 0;
-
-    while (fread(&factura, sizeof(struct Factura), 1, file))
-    {
-        factura.productos = malloc(factura.numProductos * sizeof(struct Producto));
-        fread(factura.productos, sizeof(struct Producto), factura.numProductos, file);
-
-        if (factura.numeroFactura == numeroFactura)
-        {
-            encontrado = 1;
-            printf("Factura #%d eliminada correctamente.\n", numeroFactura);
-            free(factura.productos);
-            continue; // No escribir esta factura en el archivo temporal
+    for (int i = 0; i < numFacturas; i++) {
+        fread(&facturas[i], sizeof(struct Factura), 1, file);
+        facturas[i].productos = malloc(facturas[i].numProductos * sizeof(struct Producto));
+        if (!facturas[i].productos) {
+            printf("Error al asignar memoria para productos.\n");
+            fclose(file);
+            for (int j = 0; j < i; j++) free(facturas[j].productos);
+            free(facturas);
+            return;
         }
-
-        fwrite(&factura, sizeof(struct Factura), 1, tempFile);
-        fwrite(factura.productos, sizeof(struct Producto), factura.numProductos, tempFile);
-        free(factura.productos);
+        fread(facturas[i].productos, sizeof(struct Producto), facturas[i].numProductos, file);
     }
 
     fclose(file);
-    fclose(tempFile);
 
-    if (!encontrado)
-    {
-        printf("No se encontro una factura con el numero proporcionado.\n");
-        remove("temp.dat");
+    int numEliminar = leerEnteroPositivo("Ingrese el numero de factura a eliminar: ");
+    int nuevasNumFacturas = 0;
+
+    for (int i = 0; i < numFacturas; i++) {
+        if (facturas[i].numeroFactura == numEliminar) {
+            printf("Factura #%d eliminada.\n", numEliminar);
+            free(facturas[i].productos);
+        } else {
+            facturas[nuevasNumFacturas++] = facturas[i]; // Combinación de asignación e incremento
+        }
     }
-    else
-    {
-        remove("factura.dat");
-        rename("temp.dat", "factura.dat");
+
+    if (nuevasNumFacturas == numFacturas) { // No se encontró la factura
+        printf("No se encontro la factura.\n");
+        for (int i = 0; i < numFacturas; i++) free(facturas[i].productos);
+        free(facturas);
+        return;
     }
+
+    file = fopen("factura.dat", "wb");
+    if (!file) {
+        printf("Error al reabrir el archivo.\n");
+        for (int i = 0; i < numFacturas; i++) free(facturas[i].productos);
+        free(facturas);
+        return;
+    }
+
+    for (int i = 0; i < nuevasNumFacturas; i++) {
+        fwrite(&facturas[i], sizeof(struct Factura), 1, file);
+        fwrite(facturas[i].productos, sizeof(struct Producto), facturas[i].numProductos, file);
+        free(facturas[i].productos);
+    }
+
+    fclose(file);
+    free(facturas);
 }
 
 void reporteResumen()
